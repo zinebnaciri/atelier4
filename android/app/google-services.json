@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "243206602501",
+    "project_id": "atelier-4-z-naciri-iir5g7",
+    "storage_bucket": "atelier-4-z-naciri-iir5g7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:243206602501:android:01727d530f451e9e1c416c",
+        "android_client_info": {
+          "package_name": "com.example.atelier4"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-qFg-sLA6L0Nt9hsF4xIKeZtFjcsrEKc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
