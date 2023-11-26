@@ -19,10 +19,10 @@ factory Produit.fromFirestore(DocumentSnapshot doc) {
     Map data = doc.data() as Map;
     return Produit(
         id: doc.id,
-        marque: data['marque'] ?? 10,
+        marque: data['brand'] ?? '',
         label: data['label'] ?? '',
         categorie: data['categorie'] ?? '',
-        prix: (data['prix'] ?? 0.0).toDouble(),
+        prix: (data['price'] ?? 0.0).toDouble(),
         quantity: data['quantity'] ?? 0);
   }
 }
