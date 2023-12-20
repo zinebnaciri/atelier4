@@ -27,7 +27,6 @@ class _ListeProduitsState extends State<ListeProduits> {
   String userRole = '';
   List<String> userFavorites = [];
 
-
   @override
   Widget build(BuildContext context) {
     print('User Role: $userRole');
@@ -39,7 +38,7 @@ class _ListeProduitsState extends State<ListeProduits> {
             icon: Icon(Icons.logout),
             onPressed: _logout,
           ),
-           IconButton(
+          IconButton(
             icon: Icon(Icons.favorite),
             onPressed: _viewFavorites,
           ),
@@ -156,26 +155,25 @@ class _ListeProduitsState extends State<ListeProduits> {
   }
 
   void _getUserRole() async {
-  User? user = FirebaseAuth.instance.currentUser;
+    User? user = FirebaseAuth.instance.currentUser;
 
-  if (user != null) {
-    QuerySnapshot userSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('email', isEqualTo: user.email)
-        .get();
+    if (user != null) {
+      QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: user.email)
+          .get();
 
-    if (userSnapshot.docs.isNotEmpty) {
-      DocumentSnapshot userDocument = userSnapshot.docs.first;
-      setState(() {
-        userRole = userDocument['role'] ?? '';
-        userFavorites = List<String>.from(userDocument['favorites'] ?? []);
-      });
-    } else {
-      print('User document not found in the "users" collection.');
+      if (userSnapshot.docs.isNotEmpty) {
+        DocumentSnapshot userDocument = userSnapshot.docs.first;
+        setState(() {
+          userRole = userDocument['role'] ?? '';
+          userFavorites = List<String>.from(userDocument['favorites'] ?? []);
+        });
+      } else {
+        print('User document not found in the "users" collection.');
+      }
     }
   }
-}
-
 
   void _confirmDelete(String produitId) {
     showDialog(
@@ -288,13 +286,13 @@ class _ListeProduitsState extends State<ListeProduits> {
 
     return null;
   }
-  void _viewFavorites() {
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => FavoritesPage()),
-  );
-}
 
+  void _viewFavorites() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => FavoritesPage()),
+    );
+  }
 
   void _showEditModal(Produit produit) {
     labelController.text = produit.label;
@@ -346,25 +344,26 @@ class _ListeProduitsState extends State<ListeProduits> {
       },
     );
   }
+
   void _toggleFavorite(String productId) {
-  setState(() {
-    if (userFavorites.contains(productId)) {
-      userFavorites.remove(productId);
-    } else {
-      userFavorites.add(productId);
-    }
-  });
+    setState(() {
+      if (userFavorites.contains(productId)) {
+        userFavorites.remove(productId);
+      } else {
+        userFavorites.add(productId);
+      }
+    });
 
-  // Update the 'favorites' field in the user's document
-  _updateUserFavorites(userFavorites);
-}
-void _updateUserFavorites(List<String> favorites) {
-  User? user = FirebaseAuth.instance.currentUser;
-  if (user != null) {
-    db.collection('users').doc(user.uid).update({'favorites': favorites});
+    // Update the 'favorites' field in the user's document
+    _updateUserFavorites(userFavorites);
   }
-}
 
+  void _updateUserFavorites(List<String> favorites) {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      db.collection('users').doc(user.uid).update({'favorites': favorites});
+    }
+  }
 
   void _logout() async {
     await FirebaseAuth.instance.signOut();
