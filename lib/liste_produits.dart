@@ -23,9 +23,11 @@ class _ListeProduitsState extends State<ListeProduits> {
   String editingProductId = '';
   String imageUrl = '';
   bool img = false;
+  String userRole = '';
 
   @override
   Widget build(BuildContext context) {
+     print('User Role: $userRole');
     return Scaffold(
       appBar: AppBar(
         title: Text('Liste des Produits'),
@@ -97,12 +99,14 @@ class _ListeProduitsState extends State<ListeProduits> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                     if (userRole != 'user')
                       IconButton(
                         icon: Icon(Icons.edit),
                         onPressed: () {
                           _showEditModal(produit);
                         },
                       ),
+                        if (userRole != 'user')
                       IconButton(
                         icon: Icon(Icons.delete),
                         onPressed: () {
@@ -117,12 +121,43 @@ class _ListeProduitsState extends State<ListeProduits> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+       floatingActionButton: userRole != 'user'
+          ?FloatingActionButton(
         onPressed: _showCreateModal,
         child: Icon(Icons.add),
-      ),
+      )
+       : null,
     );
   }
+ @override
+  void initState() {
+    super.initState();
+    // Retrieve the user's role when the widget initializes
+    _getUserRole();
+  }
+ void _getUserRole() async {
+  User? user = FirebaseAuth.instance.currentUser;
+
+  if (user != null) {
+    // Query the 'users' collection to find the user document with the matching email
+    QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: user.email)
+        .get();
+
+    if (userSnapshot.docs.isNotEmpty) {
+      // Retrieve the user role from the first document in the query result
+      DocumentSnapshot userDocument = userSnapshot.docs.first;
+      setState(() {
+        userRole = userDocument['role'] ?? '';
+      });
+    } else {
+      print('User document not found in the "users" collection.');
+    }
+  }
+}
+
+
 
   void _confirmDelete(String produitId) {
     showDialog(
