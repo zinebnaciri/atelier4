@@ -1,3 +1,4 @@
+import 'package:atelier4/favorites.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,10 +25,12 @@ class _ListeProduitsState extends State<ListeProduits> {
   String imageUrl = '';
   bool img = false;
   String userRole = '';
+  List<String> userFavorites = [];
+
 
   @override
   Widget build(BuildContext context) {
-     print('User Role: $userRole');
+    print('User Role: $userRole');
     return Scaffold(
       appBar: AppBar(
         title: Text('Liste des Produits'),
@@ -35,6 +38,10 @@ class _ListeProduitsState extends State<ListeProduits> {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: _logout,
+          ),
+           IconButton(
+            icon: Icon(Icons.favorite),
+            onPressed: _viewFavorites,
           ),
         ],
       ),
@@ -99,20 +106,31 @@ class _ListeProduitsState extends State<ListeProduits> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                     if (userRole != 'user')
                       IconButton(
-                        icon: Icon(Icons.edit),
+                        icon: Icon(
+                          userFavorites.contains(produit.id)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: Colors.red,
+                        ),
                         onPressed: () {
-                          _showEditModal(produit);
+                          _toggleFavorite(produit.id);
                         },
                       ),
-                        if (userRole != 'user')
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          _confirmDelete(produit.id);
-                        },
-                      ),
+                      if (userRole != 'user')
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () {
+                            _showEditModal(produit);
+                          },
+                        ),
+                      if (userRole != 'user')
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            _confirmDelete(produit.id);
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -121,42 +139,42 @@ class _ListeProduitsState extends State<ListeProduits> {
           );
         },
       ),
-       floatingActionButton: userRole != 'user'
-          ?FloatingActionButton(
-        onPressed: _showCreateModal,
-        child: Icon(Icons.add),
-      )
-       : null,
+      floatingActionButton: userRole != 'user'
+          ? FloatingActionButton(
+              onPressed: _showCreateModal,
+              child: Icon(Icons.add),
+            )
+          : null,
     );
   }
- @override
+
+  @override
   void initState() {
     super.initState();
-    // Retrieve the user's role when the widget initializes
+
     _getUserRole();
   }
- void _getUserRole() async {
+
+  void _getUserRole() async {
   User? user = FirebaseAuth.instance.currentUser;
 
   if (user != null) {
-    // Query the 'users' collection to find the user document with the matching email
     QuerySnapshot userSnapshot = await FirebaseFirestore.instance
         .collection('users')
         .where('email', isEqualTo: user.email)
         .get();
 
     if (userSnapshot.docs.isNotEmpty) {
-      // Retrieve the user role from the first document in the query result
       DocumentSnapshot userDocument = userSnapshot.docs.first;
       setState(() {
         userRole = userDocument['role'] ?? '';
+        userFavorites = List<String>.from(userDocument['favorites'] ?? []);
       });
     } else {
       print('User document not found in the "users" collection.');
     }
   }
 }
-
 
 
   void _confirmDelete(String produitId) {
@@ -261,7 +279,8 @@ class _ListeProduitsState extends State<ListeProduits> {
         });
         return imageUrl;
       } else {
-        print("Échec de la mise à jour de l'image, essayez avec une autre image");
+        print(
+            "Échec de la mise à jour de l'image, essayez avec une autre image");
       }
     } else {
       print("Le fichier n'est pas une image");
@@ -269,6 +288,13 @@ class _ListeProduitsState extends State<ListeProduits> {
 
     return null;
   }
+  void _viewFavorites() {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => FavoritesPage()),
+  );
+}
+
 
   void _showEditModal(Produit produit) {
     labelController.text = produit.label;
@@ -320,6 +346,25 @@ class _ListeProduitsState extends State<ListeProduits> {
       },
     );
   }
+  void _toggleFavorite(String productId) {
+  setState(() {
+    if (userFavorites.contains(productId)) {
+      userFavorites.remove(productId);
+    } else {
+      userFavorites.add(productId);
+    }
+  });
+
+  // Update the 'favorites' field in the user's document
+  _updateUserFavorites(userFavorites);
+}
+void _updateUserFavorites(List<String> favorites) {
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    db.collection('users').doc(user.uid).update({'favorites': favorites});
+  }
+}
+
 
   void _logout() async {
     await FirebaseAuth.instance.signOut();
@@ -345,6 +390,7 @@ class _ListeProduitsState extends State<ListeProduits> {
     categorieController.clear();
     editingProductId = '';
   }
+
   void _createProduit() async {
     if (img) {
       String uploadedImageUrl = await uploadImageToStorage(File(imageUrl));
